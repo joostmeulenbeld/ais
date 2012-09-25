@@ -36,6 +36,7 @@ module Service
 	  @regular_compliance = Queue.new
 	  @mssi_queue = Queue.new
 	  @combined_compliance = true;
+	  @combchecker_thread = nil
 
     end
     
@@ -62,6 +63,19 @@ module Service
         begin
           loop do
             check_dynamic_compliance(method(:publish_message), @dynamic_received, @dynamic_messages)
+            check_combine_compliance(method(:publish_message), @mssi_queue, @dynamic_compliance, @regular_compliance)
+          end
+        rescue => e
+          @log.fatal("Checker thread exception: #{e.message}")
+          e.backtrace.each { |line| @log.fatal(line) }
+          puts e.message
+          raise
+        end
+      end
+
+      @combchecker_thread = Thread.new do
+        begin
+          loop do
             check_combine_compliance(method(:publish_message), @mssi_queue, @dynamic_compliance, @regular_compliance)
           end
         rescue => e
