@@ -23,12 +23,18 @@ module Service
       @decoder = nil
       @checker_thread = nil
       @dynchecker_thread = nil
-      @expected = Queue.new
+      @combine_check_thread = nil
+      @expected = Queue.new	
       @dynamic_received = Queue.new
       @dynamic_messages = {}
       @dynamic_buffered = {}
       @last_recv = {}
       @next_ts = {}
+
+	  @dynamic_compliance = Queue.new
+	  @regular_compliance = Queue.new
+	  @combined_compliance = true;
+
     end
     
     def start(endpoint)
@@ -54,6 +60,7 @@ module Service
         begin
           loop do
             check_dynamic_compliance(method(:publish_message), @dynamic_received, @dynamic_messages)
+            check_combine_compliance(@dynamic_compliance, @regular_compliance)
           end
         rescue => e
           @log.fatal("Checker thread exception: #{e.message}")
@@ -74,6 +81,7 @@ module Service
     def stop
       @checker_thread.kill if @checker_thread
       @dynchecker_thread.kill if @dynchecker_thread
+      #@combine_check_thread kill if @combine_check_thread
       @message_service.stop
       @publisher.stop
       @decoder.release if @decoder
@@ -159,9 +167,11 @@ module Service
             
       @log.debug("Vessel #{mmsi} compliant: #{compliant}")
       
-      if not compliant
-        publish_method.call(mmsi)
-      end
+      @regular_compliance.push(compliant)
+      #if not compliant
+      #  publish_method.call(mmsi)
+	  #end
+
     end
 
     def check_dynamic_compliance(publish_method, received, receptions)
@@ -196,14 +206,27 @@ module Service
 
       @log.debug("Vessel #{mmsi} compliant: #{compliant}")
 
-      if not compliant
-        publish_method.call(mmsi)
-      end
+      
+	  @dynamic_compliance.push(compliant)
+      #if not compliant
+      #  publish_method.call(mmsi)
+      #end  
     end
+
+	#checks if both compliance checks had been true, and returns true if and only if they were both succesful.
+	def check_combine_compliance(dynamic_queue, regular_queue)
+	  if @dynamic_queue.pop(false) or @regular_queue.pop(false)
+         
+      end
+	end
     
     def publish_message(mmsi)
-      @log.debug("Publishing non-compliance of vessel #{mmsi}")
-      @publisher.publish("NON-COMPLIANT #{mmsi}")
+      @log.error("Publishing (non)-compliance of vessel #{mmsi}")
+      if @combined_complaince
+        @publisher.publish("COMPLIANT #{mmsi}")
+      else
+        @publisher.publish("NON-COMPLIANT #{mmsi}")
+      end
     end
   end
 end

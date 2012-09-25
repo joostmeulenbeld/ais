@@ -11,6 +11,7 @@ module Service
     def initialize(registry)
       super(registry)
       @log = Util::get_log('vessel')
+	  @log.level = Logger::DEBUG
       @vessels = {}
       @vessels_mutex = Mutex.new
       @reply_service = Platform::ReplyService.new(method(:process_request), @log)
