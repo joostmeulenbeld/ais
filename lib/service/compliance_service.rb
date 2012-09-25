@@ -62,7 +62,7 @@ module Service
         begin
           loop do
             check_dynamic_compliance(method(:publish_message), @dynamic_received, @dynamic_messages)
-            check_combine_compliance(@dynamic_compliance, @regular_compliance)
+            check_combine_compliance(method(:publish_message), @mssi_queue, @dynamic_compliance, @regular_compliance)
           end
         rescue => e
           @log.fatal("Checker thread exception: #{e.message}")
@@ -169,7 +169,7 @@ module Service
         end
       end
             
-      @log.debug("Vessel #{mmsi} compliant: #{compliant}")
+      @log.debug("Standard check: Vessel #{mmsi} compliant: #{compliant}")
       
       @regular_compliance.push(compliant)
       #if not compliant
@@ -208,7 +208,7 @@ module Service
         @dynamic_buffered[mmsi] = prev_reception
       end
 
-      @log.debug("Vessel #{mmsi} compliant: #{compliant}")
+      @log.debug("Dynamic check: Vessel #{mmsi} compliant: #{compliant}")
 
       
 	  @dynamic_compliance.push(compliant)
@@ -218,8 +218,10 @@ module Service
     end
 
 	#checks if both compliance checks had been true, and returns true if and only if they were both succesful.
-	def check_combine_compliance(dynamic_queue, regular_queue) 
-      publish_message(@mssi_queue.pop(false), dynamic_queue.pop(false) or regular_queue.pop(false))
+	def check_combine_compliance(publish_method, mssi_queue, dynamic_queue, regular_queue)
+		compliant = dynamic_queue.pop(false) or regular_queue.pop(false)
+      publish_method.call(mssi_queue.pop(false), compliant)
+		@log.debug("Combine check: Vessel #{mmsi} compliant: #{compliant}")
 	end
     
     def publish_message(mmsi, compliant)
