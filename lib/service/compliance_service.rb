@@ -220,7 +220,8 @@ module Service
 	#checks if both compliance checks had been true, and returns true if and only if they were both succesful.
 	def check_combine_compliance(publish_method, mssi_queue, dynamic_queue, regular_queue)
 		compliant = dynamic_queue.pop(false) or regular_queue.pop(false)
-      publish_method.call(mssi_queue.pop(false), compliant)
+		mmsi = mssi_queue.pop(false)
+      publish_method.call(mmsi, compliant)
 		@log.debug("Combine check: Vessel #{mmsi} compliant: #{compliant}")
 	end
     
