@@ -215,7 +215,7 @@ module Service
 
 	#checks if both compliance checks had been true, and returns true if and only if they were both succesful.
 	def check_combine_compliance(dynamic_queue, regular_queue)
-	  if @dynamic_queue.pop(false) or @regular_queue.pop(false)
+	  if @dynamic_compliance.pop(false) or @regular_compliance.pop(false)
          
       end
 	end
