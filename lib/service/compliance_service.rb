@@ -210,7 +210,6 @@ module Service
 
       @log.debug("Dynamic check: Vessel #{mmsi} compliant: #{compliant}")
 
-      
 	  @dynamic_compliance.push(compliant)
       #if not compliant
       #  publish_method.call(mmsi)
