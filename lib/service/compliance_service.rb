@@ -17,6 +17,7 @@ module Service
       super(registry)
       @registry = registry
       @log = Util::get_log('compliance')
+      @log.level = Logger::DEBUG
       filter = ['1 ', '2 ', '3 ', '5 ']
       @message_service = Platform::SubscriberService.new(method(:process_message), filter, @log)
       @publisher = Platform::PublisherService.new(@log)
@@ -117,7 +118,7 @@ module Service
       
       @log.debug("Message #{payload} with timestamp #{timestamp} and mmsi #{mmsi}")
 
-		@mssi_queue.push(mssi);
+		@mssi_queue.push(mmsi);
 
       if type == 1 or type == 2 or type == 3
         if not @dynamic_messages.has_key?(mmsi)
