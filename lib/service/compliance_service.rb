@@ -75,7 +75,6 @@ module Service
         begin
           loop do
             check_dynamic_compliance(method(:publish_message), @dynamic_received, @dynamic_messages)
-            check_combine_compliance(method(:publish_message), @mssi_queue, @dynamic_compliance, @regular_compliance)
           end
         rescue => e
           @log.fatal("Checker thread exception: #{e.message}")
