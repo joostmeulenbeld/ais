@@ -224,7 +224,7 @@ module Service
     
     def publish_message(mmsi, compliant)
       @log.error("Publishing (non)-compliance of vessel #{mmsi}")
-      if complaint
+      if compliant
         @publisher.publish("COMPLIANT #{mmsi}")
       else
         @publisher.publish("NON-COMPLIANT #{mmsi}")
