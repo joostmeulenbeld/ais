@@ -33,6 +33,7 @@ module Service
 
 	  @dynamic_compliance = Queue.new
 	  @regular_compliance = Queue.new
+	  @mssi_queue = Queue.new
 	  @combined_compliance = true;
 
     end
@@ -115,6 +116,8 @@ module Service
       end
       
       @log.debug("Message #{payload} with timestamp #{timestamp} and mmsi #{mmsi}")
+
+		@mssi_queue.push(mssi);
 
       if type == 1 or type == 2 or type == 3
         if not @dynamic_messages.has_key?(mmsi)
@@ -214,15 +217,13 @@ module Service
     end
 
 	#checks if both compliance checks had been true, and returns true if and only if they were both succesful.
-	def check_combine_compliance(dynamic_queue, regular_queue)
-	  if @dynamic_compliance.pop(false) or @regular_compliance.pop(false)
-         
-      end
+	def check_combine_compliance(dynamic_queue, regular_queue) 
+      publish_message(@mssi_queue.pop(false), dynamic_queue.pop(false) or regular_queue.pop(false))
 	end
     
-    def publish_message(mmsi)
+    def publish_message(mmsi, compliant)
       @log.error("Publishing (non)-compliance of vessel #{mmsi}")
-      if @combined_complaince
+      if complaint
         @publisher.publish("COMPLIANT #{mmsi}")
       else
         @publisher.publish("NON-COMPLIANT #{mmsi}")
