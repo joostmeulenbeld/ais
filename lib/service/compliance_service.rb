@@ -13,6 +13,16 @@ module Service
     attr_reader :dynamic_messages
     attr_writer :expected, :dynamic_received
     
+     class CompliantVessel
+       attr_writer :mmsi
+       attr_writer :regular_compliance
+       attr_writer :dynamic_compliance
+
+	    def initialize(m)
+         @mmsi = m
+       end
+     end
+
     def initialize(registry)
       super(registry)
       @registry = registry
@@ -37,6 +47,8 @@ module Service
 	  @mssi_queue = Queue.new
 	  @combined_compliance = true;
 	  @combchecker_thread = nil
+
+     @compliance_list = {}
 
     end
     
@@ -73,18 +85,18 @@ module Service
         end
       end
 
-      @combchecker_thread = Thread.new do
-        begin
-          loop do
-            check_combine_compliance(method(:publish_message), @mssi_queue, @dynamic_compliance, @regular_compliance)
-          end
-        rescue => e
-          @log.fatal("Checker thread exception: #{e.message}")
-          e.backtrace.each { |line| @log.fatal(line) }
-          puts e.message
-          raise
-        end
-      end
+      #@combchecker_thread = Thread.new do
+      #  begin
+      #    loop do
+      #      check_combine_compliance(method(:publish_message), @mssi_queue, @dynamic_compliance, @regular_compliance)
+      #    end
+      #  rescue => e
+      #    @log.fatal("Checker thread exception: #{e.message}")
+      #    e.backtrace.each { |line| @log.fatal(line) }
+      #    puts e.message
+      #    raise
+      #  end
+      #end
 
       register_self('ais/compliance', endpoint)
       @log.info("Service started")
@@ -185,7 +197,13 @@ module Service
             
       @log.debug("Standard check: Vessel #{mmsi} compliant: #{compliant}")
       
-      @regular_compliance.push(compliant)
+      if not @compliance_list.has_key?(mmsi)
+          @compliance_list[mmsi] = [true, true]
+      end
+      @compliance_list[mmsi][0] = compliant
+		publish_method.call(mmsi)
+
+      #@regular_compliance.push(compliant)
       #if not compliant
       #  publish_method.call(mmsi)
 	  #end
@@ -224,7 +242,13 @@ module Service
 
       @log.debug("Dynamic check: Vessel #{mmsi} compliant: #{compliant}")
 
-	  @dynamic_compliance.push(compliant)
+      if not @compliance_list.has_key?(mmsi)
+          @compliance_list[mmsi] = [true, true]
+      end
+      @compliance_list[mmsi][1] = compliant
+		publish_method.call(mmsi)
+
+	  #@dynamic_compliance.push(compliant)
       #if not compliant
       #  publish_method.call(mmsi)
       #end  
@@ -238,11 +262,13 @@ module Service
 		@log.debug("Combine check: Vessel #{mmsi} compliant: #{compliant}")
 	end
     
-    def publish_message(mmsi, compliant)
-      @log.error("Publishing (non)-compliance of vessel #{mmsi}")
+    def publish_message(mmsi)
+		compliant = (@compliance_list[mmsi][0] and @compliance_list[mmsi][1])
       if compliant
+        @log.error("Publishing compliance of vessel #{mmsi}")
         @publisher.publish("COMPLIANT #{mmsi}")
       else
+        @log.error("Publishing non-compliance of vessel #{mmsi}")
         @publisher.publish("NON-COMPLIANT #{mmsi}")
       end
     end
