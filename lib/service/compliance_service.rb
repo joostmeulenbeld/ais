@@ -98,7 +98,7 @@ module Service
       #end
 
       register_self('ais/compliance', endpoint)
-      @log.info("Service started")
+      @log.info("Service started with endpoint #{endpoint}")
     end
     
     def wait
