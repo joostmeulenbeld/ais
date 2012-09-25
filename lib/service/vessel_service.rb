@@ -49,14 +49,21 @@ module Service
 
     def process_compliance_report(data)
       request = data.split(' ')
-      if request.length != 2 or request[0] != 'NON-COMPLIANT'
+      if request.length != 2
         return
       end
       mmsi = request[1].to_i
-      
-      @vessels_mutex.synchronize do
-        if @vessels.has_key?(mmsi)
-          @vessels[mmsi].compliant = false
+      if request[0] == 'NON-COMPLIANT'      
+        @vessels_mutex.synchronize do
+          if @vessels.has_key?(mmsi)
+            @vessels[mmsi].compliant = false
+          end
+        end
+      elsif request[0] == 'COMPLIANT'
+        @vessels_mutex.synchronize do
+          if @vessels.has_key?(mmsi)
+            @vessels[mmsi].compliant = true
+          end
         end
       end
     end
