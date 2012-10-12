@@ -26,6 +26,8 @@ module Service
               end
             elsif request == 'info'
               reply = service.info(args[0])
+            elsif request == 'percentage'
+              reply = service.percentage()
             end
             reply_queue.push(reply)
           end
@@ -54,6 +56,11 @@ module Service
     def info(mmsi)
       @request_queue.push(['info', [mmsi]])
       @reply_queue.pop   
+    end
+    
+    def percentage()
+      @request_queue.push(['percentage', [0]])
+      @reply_queue.pop
     end
     
     def reset

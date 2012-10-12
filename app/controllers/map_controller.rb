@@ -47,4 +47,13 @@ class MapController < ApplicationController
       format.html { render :layout => false }
     end
   end
+  
+  def percentage
+    logger.debug("Controller received percentage request")
+    
+    @percentage = vessel_service.percentage()
+    
+    respond_to do |format|
+      format.html { render :layout => false }
+    end
 end

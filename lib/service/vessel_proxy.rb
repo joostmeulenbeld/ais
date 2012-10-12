@@ -37,5 +37,17 @@ module Service
         nil
       end
     end
+    
+    def percentage()
+      @socket.send_string("PERCENTAGE")
+      @socket.recv_string(message = "")
+      
+      if message.length > 0
+        message.to_i
+      else
+        nil
+      end
+    end
+    
   end
 end

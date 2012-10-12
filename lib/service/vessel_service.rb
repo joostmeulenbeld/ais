@@ -19,6 +19,9 @@ module Service
       @message_service = Platform::SubscriberService.new(method(:process_message), filter, @log)
       @compliance_service = Platform::SubscriberService.new(method(:process_compliance_report), [''], @log)
       @decoder = nil
+      
+      @compliant = 0;
+      @noncompliant = 0;
     end
     
     def start(endpoint)
@@ -59,12 +62,14 @@ module Service
             @vessels[mmsi].compliant = false
           end
         end
+        @noncompliant += 1
       elsif request[0] == 'COMPLIANT'
         @vessels_mutex.synchronize do
           if @vessels.has_key?(mmsi)
             @vessels[mmsi].compliant = true
           end
         end
+        @compliant += 1
       end
     end
 
@@ -127,6 +132,8 @@ module Service
         process_list_request(args)
       elsif cmd == 'INFO'
         process_info_request(args)
+      elsif cmd == 'PERCENTAGE'
+        process_percentage_request()
       end
     end
     
@@ -176,5 +183,14 @@ module Service
         nil
       end      
     end
+    
+    def process_percentage_request()
+      if @noncompliant + @compliant == 0
+        0
+      else
+        @compliant / (@compliant + @noncompliant)
+      end
+    end
+    
   end
 end
